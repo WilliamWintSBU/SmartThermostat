@@ -8,6 +8,9 @@
   randomnerdtutorials.com/esp8266-web-server/
   Arduino.cc
   arduino-esp8266.readthedocs.io 
+  
+  Time setting code from:
+  https://www.instructables.com/Getting-Time-From-Internet-Using-ESP8266-NTP-Clock/
 
   the backend API and code are rudimenty at best, but they are writen in C and run on a potato, so give them a break
 
@@ -22,6 +25,8 @@
 #include <ESP8266WiFi.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include <NTPClient.h>
+#include "WiFiUdp.h"
 /*
   Pinouts on the ESP8266 arduino compadible breakout board do not always reflect lables
   consult datasheet or google "ESP8266 arduino pinout"
@@ -37,12 +42,20 @@ DallasTemperature sensors(&oneWire);
 
 // define global temperature variables
 float setpoint = 75.0 ;
+float nightsetpoint = 80 ;
 float roomTemp = 0.0;
 
 WiFiServer server(80);
 
-
 String request;
+
+const long utcOffsetInSeconds = -5*60*60;
+
+// Define NTP Client to get time
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP, "pool.ntp.org", utcOffsetInSeconds);
+
+
 
 void setup()
 {
@@ -73,6 +86,8 @@ void setup()
 
   // connected
   server.begin();
+  
+  timeClient.begin();
 
 }
 
@@ -90,6 +105,22 @@ void loop()
 
   delay(100);
 }
+  bool isNight()
+  {
+    // placeholder function to tell which setpoint to u
+    
+    timeClient.update();
+    int hour = timeClient.getHours();
+    if (hour < 5 )
+    {
+      // it is between midnight and 4 AM
+      return true;
+    }
+    else
+    {
+    return false;
+    }
+  }
 
   // act like thermostat
   void update()
@@ -100,14 +131,30 @@ void loop()
     Serial.print("Room" "Temperature: ");
     Serial.println(roomTemp);
 
-    if(roomTemp < setpoint)
+    if(isNight())
     {
-      digitalWrite(HEAT_ENABLE, HIGH );
+      if(roomTemp < nightsetpoint)
+      {
+        digitalWrite(HEAT_ENABLE, HIGH );
+      }
+      else
+      {
+        digitalWrite(HEAT_ENABLE, LOW );
+      }      
     }
     else
     {
-      digitalWrite(HEAT_ENABLE, LOW );
+      if(roomTemp < setpoint)
+      {
+        digitalWrite(HEAT_ENABLE, HIGH );
+      }
+      else
+      {
+        digitalWrite(HEAT_ENABLE, LOW );
+      }
     }
+
+    
 
   }
 
