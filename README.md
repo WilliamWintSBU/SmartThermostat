@@ -1,0 +1,7 @@
+# SmartThermostat
+DIY smart thermostat using an ESP8266 Arduino Breakout Board
+
+This project was made for HACK@CEWIT 2023 at Stony Brook University. the first and seccond commits to main were all made by be in a littl over a day. 
+It did not impress the judges, but maybe you will like it better! I may work on it more eventually.
+
+Feel free to use the code for whatever you want, LMK if you do somthing cool with it. 
